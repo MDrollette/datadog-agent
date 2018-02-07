@@ -45,6 +45,7 @@ var (
 	}
 )
 
+// JMXFetch represent a jmxfetch instance.
 type JMXFetch struct {
 	JavaBinPath        string
 	JavaOptions        string
@@ -61,6 +62,7 @@ type JMXFetch struct {
 	exitFilePath       string
 }
 
+// New returns a new instance of JMXFetch with default values.
 func New() *JMXFetch {
 	return &JMXFetch{
 		JavaBinPath:        defaultJavaBinPath,
@@ -72,6 +74,7 @@ func New() *JMXFetch {
 	}
 }
 
+// Run starts the JMXFetch process
 func (j *JMXFetch) Run() error {
 	here, _ := executable.Folder()
 	classpath := path.Join(here, "dist", "jmx", jmxJarName)
@@ -185,6 +188,7 @@ func (j *JMXFetch) Run() error {
 	return j.cmd.Start()
 }
 
+// Kill kills the JMXFetch process
 func (j *JMXFetch) Kill() error {
 	if j.JmxExitFile == "" {
 		// Unix
@@ -201,6 +205,7 @@ func (j *JMXFetch) Kill() error {
 	return nil
 }
 
+// Wait waits for the end of the JMXFetch process and returns the error code
 func (j *JMXFetch) Wait() error {
 	return j.cmd.Wait()
 }
