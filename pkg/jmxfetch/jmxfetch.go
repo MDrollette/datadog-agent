@@ -20,7 +20,7 @@ import (
 const (
 	jmxJarName                        = "jmxfetch-0.18.2-jar-with-dependencies.jar"
 	jmxMainClass                      = "org.datadog.jmxfetch.App"
-	jmxCollectCommand                 = "collect"
+	defaultJmxCommand                 = "collect"
 	defaultJvmMaxMemoryAllocation     = " -Xmx200m"
 	defaultJvmInitialMemoryAllocation = " -Xms50m"
 	defaultJavaBinPath                = "java"
@@ -47,8 +47,13 @@ type JMXFetch struct {
 	JavaCustomJarPaths []string
 	LogLevel           string
 	JmxExitFile        string
-	exitFilePath       string
+	Command            string
+	ReportOnConsole    bool
+	ConfDirectory      string
+	Checks             []string
+	defaultJmxCommand  string
 	cmd                *exec.Cmd
+	exitFilePath       string
 }
 
 func New(exitFile string) *JMXFetch {
@@ -57,6 +62,9 @@ func New(exitFile string) *JMXFetch {
 		JavaCustomJarPaths: []string{},
 		LogLevel:           defaultLogLevel,
 		JmxExitFile:        exitFile,
+		Command:            defaultJmxCommand,
+		ReportOnConsole:    false,
+		Checks:             []string{},
 	}
 }
 
@@ -79,7 +87,11 @@ func (j *JMXFetch) Run() error {
 	if bindHost == "" || bindHost == "0.0.0.0" {
 		bindHost = "localhost"
 	}
+
 	reporter := fmt.Sprintf("statsd:%s:%s", bindHost, config.Datadog.GetString("dogstatsd_port"))
+	if j.ReportOnConsole {
+		reporter = "console"
+	}
 
 	//TODO : support auto discovery
 
@@ -110,8 +122,15 @@ func (j *JMXFetch) Run() error {
 		"--check_period", fmt.Sprintf("%v", int(check.DefaultCheckInterval/time.Millisecond)), // Period of the main loop of jmxfetch in ms
 		"--log_level", jmxLogLevel,
 		"--reporter", reporter, // Reporter to use
-		jmxCollectCommand, // Name of the command
 	)
+
+	if j.ConfDirectory != "" {
+		subprocessArgs = append(subprocessArgs, "--check")
+		subprocessArgs = append(subprocessArgs, j.Checks...)
+		subprocessArgs = append(subprocessArgs, "--conf_directory", j.ConfDirectory)
+	}
+
+	subprocessArgs = append(subprocessArgs, j.Command)
 
 	if j.JmxExitFile != "" {
 		j.exitFilePath = path.Join(here, "dist", "jmx", j.JmxExitFile) // FIXME : At some point we should have a `run` folder
