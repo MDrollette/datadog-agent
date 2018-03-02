@@ -6,3 +6,8 @@
 windows_arch :x86_64
 # Don't append a timestamp to the package version
 append_timestamp false
+
+if ENV["S3_OMNIBUS_CACHE_URI"]
+  use_s3_caching true
+  s3_bucket ENV["S3_OMNIBUS_CACHE_URI"]
+end
