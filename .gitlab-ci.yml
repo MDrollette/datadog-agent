@@ -43,6 +43,11 @@ before_script:
   - rsync -azr --delete ./ $SRC_PATH
   - cd $SRC_PATH
   - inv -e deps
+  - set +x # make sure we don't output the creds to the build log
+  - export ACCESS_KEY_ID=$(inv.get_aws_key_id)
+  - export SECRET_ACCESS_KEY=$(inv.get_aws_secret)
+  - set -x
+
 
 
 #

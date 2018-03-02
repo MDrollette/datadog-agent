@@ -201,18 +201,3 @@ def load_release_versions(ctx, target_version):
             # environment when running a subprocess.
             return {str(k):str(v) for k, v in versions[target_version].iteritems()}
     raise Exception("Could not find '{}' version in release.json".format(target_version))
-
-def get_keys_from_profile(ctx):
-    import requests
-    aws_security_url = "http://169.254.169.254/latest/meta-data/iam/security-credentials/"
-    res = requests.get(aws_security_url)
-    res.raise_for_status()
-    profile_name = res.text
-    res = requests.get(aws_security_url + profile_name)
-    res.raise_for_status()
-
-    res_body = res.json()
-
-    access_key_id = res_body['AccessKeyId']
-    secret_access_key = res_body['SecretAccessKey']
-    return access_key_id, secret_access_key
